@@ -14,7 +14,7 @@ E_start = EllipticCurve(Fp2, [0,6,0,1,0])
 # Speeds things up in Sage
 E_start.set_order((p+1)^2)
 
-# Naive generation of the automorphism 2i 
+# Naive generation of the automorphism 2i
 two_i = generate_automorphism(E_start)
 
 # $IKEp217 public parameters
@@ -91,6 +91,10 @@ QB = EB(xQB, yQB)
 def RunAttack(num_cores):
     return CastryckDecruAttack(E_start, P2, Q2, EB, PB, QB, two_i, num_cores=num_cores)
 
+def RunAttack_NEW(num_cores):
+    return CastryckDecruAttack_NEW(E_start, P2, Q2, EB, PB, QB, two_i, num_cores=num_cores)
+
+
 if __name__ == '__main__' and '__file__' in globals():
     if '--parallel' in sys.argv:
         # Set number of cores for parallel computation
@@ -99,4 +103,3 @@ if __name__ == '__main__' and '__file__' in globals():
     else:
         num_cores = 1
     recovered_key = RunAttack(num_cores)
-

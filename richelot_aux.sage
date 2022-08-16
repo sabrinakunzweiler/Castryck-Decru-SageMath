@@ -1,3 +1,5 @@
+#load("Richelot_formulae.sage")
+
 set_verbose(-1)
 
 def Coefficient(h, n):
@@ -31,8 +33,8 @@ def FromProdToJac(C, E, P_c, Q_c, P, Q, a):
     A = Deltbet*a1/a2
     B = Deltalp*b1/b2
 
-    h  = - (A*(alp2 - alp1)*(alp1 - alp3)*x^2 + B*(bet2 - bet1)*(bet1 - bet3)) 
-    h *=   (A*(alp3 - alp2)*(alp2 - alp1)*x^2 + B*(bet3 - bet2)*(bet2 - bet1)) 
+    h  = - (A*(alp2 - alp1)*(alp1 - alp3)*x^2 + B*(bet2 - bet1)*(bet1 - bet3))
+    h *=   (A*(alp3 - alp2)*(alp2 - alp1)*x^2 + B*(bet3 - bet2)*(bet2 - bet1))
     h *=   (A*(alp1 - alp3)*(alp3 - alp2)*x^2 + B*(bet1 - bet3)*(bet3 - bet2))
 
     t1 = -(A/B)*b2/b1
@@ -283,9 +285,12 @@ def FromJacToJac(h, D11, D12, D21, D22, a, powers=None):
 def Does22ChainSplit(C, E, P_c, Q_c, P, Q, a):
     Fp2 = C.base()
     # gluing step
+    t_glue = cputime()
     h, D11, D12, D21, D22 = FromProdToJac(C, E, P_c, Q_c, P, Q, a);
+    print("gluing", cputime(t_glue));
     next_powers = None
     # print(f"order 2^{a-1} on hyp curve {h}")
+    t_chain = cputime()
     for i in range(1,a-2+1):
         h, D11, D12, D21, D22, next_powers = FromJacToJac(
             h, D11, D12, D21, D22, a-i, powers=next_powers)
@@ -300,7 +305,36 @@ def Does22ChainSplit(C, E, P_c, Q_c, P, Q, a):
                                Coefficient(G2, 0), Coefficient(G2, 1), Coefficient(G2, 2),
                                Coefficient(G3, 0), Coefficient(G3, 1), Coefficient(G3, 2)])
     delta = delta.determinant();
+    print("chain", cputime(t_chain));
+
     return delta == 0
+
+def FindGoodPartition(n):
+  #this is only a guess how a good partition might look like.
+  upper = floor(3/2*sqrt(n));
+  partition = [upper];
+  psum = upper;
+  while psum < n-upper-1 and upper > 5:
+    upper = upper-1;
+    psum = psum + upper;
+    partition.append(upper);
+  return partition;
+
+def Does22ChainSplit_NEW(C, E, P_c, Q_c, P, Q, a):
+  Fp2 = C.base()
+  # gluing step
+  t_glue = cputime();
+  h, D11, D12, D21, D22 = FromProdToJac(C, E, P_c, Q_c, P, Q, a);
+  print("gluing step", cputime(t_glue));
+  print("order 2^", a-1);
+  t_trafo = cputime();
+  kernel, type2_invariants = TransformToType2_NEW(h, D11, D12, D21, D22, a-1);
+  print("time transformation", cputime(t_trafo));
+  t_iso = cputime();
+  partition = FindGoodPartition(a-1);
+  split = RichelotChain_splitnew(type2_invariants, kernel,a-1, partition=partition);
+  print("time isogeny", cputime(t_iso));
+  return split;
 
 def OddCyclicSumOfSquares(n, factexpl, provide_own_fac):
     return NotImplemented
@@ -336,14 +370,14 @@ def Pushing3Chain(E, P, i):
 
 def AuxiliaryIsogeny(i, u, v, E_start, P2, Q2, tauhatkernel, two_i):
     """
-    Compute the distored  kernel using precomputed u,v and the 
+    Compute the distored  kernel using precomputed u,v and the
     automorphism two_i.
 
     This is used to construct the curve C from E_start and we
     compute the image of the points P_c and Q_c
     """
     tauhatkernel_distort = u*tauhatkernel + v*two_i(tauhatkernel)
-    
+
     C, tau_tilde = Pushing3Chain(E_start, tauhatkernel_distort, i)
     P_c = u*P2 + v*two_i(P2)
     Q_c = u*Q2 + v*two_i(Q2)

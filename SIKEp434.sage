@@ -9,7 +9,7 @@ SIKE_parameters = {
 }
 
 # Change me to attack different parameter sets
-NIST_submission = "SIKEp434"
+NIST_submission = "SIKEp503"
 a, b = SIKE_parameters[NIST_submission]
 
 print(f"Running the attack against {NIST_submission} parameters, which has a prime: 2^{a}*3^{b} - 1")
@@ -24,7 +24,7 @@ R.<x> = PolynomialRing(Fp2)
 E_start = EllipticCurve(Fp2, [0,6,0,1,0])
 E_start.set_order((p+1)^2, num_checks=0) # Speeds things up in Sage
 
-# Naive generation of the automorphism 2i 
+# Naive generation of the automorphism 2i
 two_i = generate_automorphism(E_start)
 
 # Generate public torsion points, for SIKE implementations
@@ -54,4 +54,3 @@ if __name__ == '__main__' and '__file__' in globals():
     else:
         num_cores = 1
     recovered_key = RunAttack(num_cores)
-
